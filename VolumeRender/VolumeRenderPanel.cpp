@@ -7,7 +7,9 @@
 #include <glm/gtx/transform.hpp>
 #include <fstream>
 #include <iostream>
+#include "mat2bmp.h"
 #include "Utility.h"
+#include <ctime>
 
 //graphCutTex 长宽需与屏幕大小一致
 VolumeRenderPanel::VolumeRenderPanel(QWidget* parent):QGLWidget(parent){
@@ -20,6 +22,7 @@ VolumeRenderPanel::VolumeRenderPanel(QWidget* parent):QGLWidget(parent){
     fin.read((char*)maxAndMin,2*4);
     fin.read((char*)dimension,3*4);    
     int w = dimension[2],h=dimension[1],d=dimension[0];
+    cout<<d<<' '<<h<<' '<<w<<endl;
     udata = new float[w*h*d];
     float datawidth = maxAndMin[0]-maxAndMin[1];
     dataFlag = new unsigned char[w*h*d];
@@ -28,7 +31,7 @@ VolumeRenderPanel::VolumeRenderPanel(QWidget* parent):QGLWidget(parent){
         udata[i] = (udata[i]-maxAndMin[1])/datawidth;
     fin.close();
     unsigned int** supervoxel = new unsigned int*[w];
-    int** label = new int*[w];
+    label = new int*[w];
     cout<<maxAndMin[0]<<' '<<maxAndMin[1]<<endl;
     for(int i=0;i<w;i++){
         supervoxel[i] = new unsigned int[h*d];
@@ -46,7 +49,17 @@ VolumeRenderPanel::VolumeRenderPanel(QWidget* parent):QGLWidget(parent){
     clock.start();
     //slic.DoSupervoxelSegmentation(supervoxel,d,h,w,label,numberlabels,supervoxelsize,compatness);
     clock.end("super voxel");
-
+    
+    /*std::ofstream fout;
+    fout.open("label.bin",std::ios::binary);
+    for(int i=0;i<w;i++)
+        fout.write((char *)label[i],h*d*4);
+    fout.close();*/
+    fin.open("label.bin",std::ios::binary);
+    for(int i=0;i<w;i++){
+        fin.read((char *)label[i],h*d*4);
+    }
+    fin.close();
     float mx = 0.0,mi=10000.0;
     for(int i=0;i<w;i++)
         for(int j=0;j<h*d;j++){
@@ -55,13 +68,18 @@ VolumeRenderPanel::VolumeRenderPanel(QWidget* parent):QGLWidget(parent){
             if(mi>label[i][j])
                 mi = label[i][j];
         }
-    cout<<mx<<' '<<mi<<endl;
+    cout<<"maxlabel:"<<mx<<' '<<mi<<endl;
     ulabel = new float[w*h*d];
     float labelwidth = mx-mi;
     for(int i=0;i<w;i++)
         for(int j=0;j<h*d;j++){
             ulabel[i*h*d+j] = label[i][j]/labelwidth;
         }
+    for(int i=0;i<1024;i++)
+        labelFlag[i] = 0.5f;
+    for(int i=18;i<19;i++)
+        labelFlag[i] = 0.5f;
+
     /*fin.open("head.bin",std::ios::binary);
     fin.read((char*)dimension,3*4);    
     int* newSuper = new int[dimension[0]*dimension[1]*dimension[2]];
@@ -215,6 +233,7 @@ VolumeRenderPanel::VolumeRenderPanel(QWidget* parent):QGLWidget(parent){
         tab[18] = "asTable/AVSTable2D_a09_g09.tab";
     for(int i=0;i<19;i++)
         asTable[i].loadFromFile(tab[i]);
+    radius = 0.03;
 }
 
 void VolumeRenderPanel::initializeGL(){
@@ -490,7 +509,7 @@ void VolumeRenderPanel::updateTex(){
     glGenTextures(1, &textureID3);
     glBindTexture(GL_TEXTURE_1D, textureID3);
     //glTexStorage3D(GL_TEXTURE_3D, 0, GL_R16, 512, 512, 175);
-    glTexImage1D(GL_TEXTURE_1D, 0,GL_R32F,256,0, GL_R32F,GL_FLOAT,opacity);
+    glTexImage1D(GL_TEXTURE_1D, 0,GL_R32F,256,0, GL_RED,GL_FLOAT,opacity);
     //glActiveTextureARB(GL_TEXTURE0);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
@@ -532,8 +551,8 @@ void VolumeRenderPanel::updateTex(){
     glBindTexture(GL_TEXTURE_3D, textureID6);
     //glTexStorage3D(GL_TEXTURE_3D, 0, GL_R16, 512, 512, 175);
     glTexImage3D(GL_TEXTURE_3D, 0,GL_R32F,d,h,w,0, GL_RED,GL_FLOAT,ulabel);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
@@ -565,6 +584,17 @@ void VolumeRenderPanel::updateTex(){
     //glBindImageTexture(0,textureID8, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(0,textureID8, 0,GL_TRUE, 0, GL_READ_WRITE, GL_R8UI);
     //updateGL();
+    glsl.glActiveTex(GL_TEXTURE12);
+    glGenTextures(1, &labelFlagTex);
+    glBindTexture(GL_TEXTURE_1D,labelFlagTex);
+    //glTexStorage3D(GL_TEXTURE_3D, 0, GL_R16, 512, 512, 175);
+    glTexImage1D(GL_TEXTURE_1D, 0,GL_R32F,850,0, GL_RED,GL_FLOAT,labelFlag);
+    //glActiveTextureARB(GL_TEXTURE0);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    loc = glsl.getUniformLocation("label_flag");
+    glsl.setUniform(loc, 12);
 
     glsl.glActiveTex(GL_TEXTURE11);
     glsl.setUniform("graphCutTex",11);
@@ -763,17 +793,17 @@ void VolumeRenderPanel::paintGL()
             glLineWidth(5);
             glsl.setUniform("axisColor",1.0,0.0,0.0);
             glBegin(GL_LINES);
-            glVertex3f(0.0,0.0,0.1);
-            glVertex3f(0.5,0.0,0.1);
+            glVertex3f(0.0,0.0,0.0);
+            glVertex3f(0.5,0.0,0.0);
             glEnd();
             glsl.setUniform("axisColor",0.0,1.0,0.0);
             glBegin(GL_LINES);
-            glVertex3f(0.0,0.0,0.1);
-            glVertex3f(0.0,0.5,0.1);
+            glVertex3f(0.0,0.0,0.0);
+            glVertex3f(0.0,0.5,0.0);
             glEnd();
             glsl.setUniform("axisColor",0.0,0.0,1.0);
             glBegin(GL_LINES);
-            glVertex3f(0.0,0.0,0.1);
+            glVertex3f(0.0,0.0,0.0);
             glVertex3f(0.0,0.0,0.5);
             glEnd();
             glsl.setUniform("axisColor",1.0,1.0,0.0);
@@ -874,7 +904,7 @@ void VolumeRenderPanel::paintGL()
             glsl.use(3);
             int count = 32;
             float theta = 3.1415926*2/count;
-            float r = 0.1;
+            if(drawPolygon)
             for(int j=points.size()-1;j>-1;j--){
                 if(points[j].type==Front)
                     glsl.setUniform("outputColor",frontColor[0],frontColor[1],frontColor[2]);
@@ -882,7 +912,7 @@ void VolumeRenderPanel::paintGL()
                     glsl.setUniform("outputColor",backColor[0],backColor[1],backColor[2]);
                 glBegin(GL_POLYGON);
                 for(int i=count;i>0;i--)
-                    glVertex3f(points[j].x+sin(theta*i)*r,points[j].y+cos(theta*i)*r,0.0f);
+                    glVertex3f(points[j].x+sin(theta*i)*radius,points[j].y+cos(theta*i)*radius,0.0f);
                 glEnd();
             }
             glsl.use(0);
@@ -893,7 +923,6 @@ void VolumeRenderPanel::paintGL()
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             int count = 32;
             float theta = 3.1415926*2/count;
-            float r = 0.1;
             for(int j=points.size()-1;j>-1;j--){
                 if(points[j].type==Front)
                     glsl.setUniform("outputColor",0.9,0.9,0.9);
@@ -901,7 +930,7 @@ void VolumeRenderPanel::paintGL()
                     glsl.setUniform("outputColor",0.5,0.5,0.5);
                 glBegin(GL_POLYGON);
                 for(int i=count;i>0;i--)
-                    glVertex3f(points[j].x+sin(theta*i)*r,points[j].y+cos(theta*i)*r,0.0f);
+                    glVertex3f(points[j].x+sin(theta*i)*radius,points[j].y+cos(theta*i)*radius,0.0f);
                 glEnd();
             }
 
@@ -920,9 +949,68 @@ void VolumeRenderPanel::paintGL()
             glVertex3f(-1.0,-1.0,0.0);
             glEnd();
             glFinish();
-            //glReadPixels(0,0,w,h,GL_RGBA,GL_FLOAT,screenPixels);
-            //graphCut = false;
-            //paintGL();
+            glReadPixels(0,0,w,h,GL_RGBA,GL_FLOAT,screenPixels);
+            int labelcount[850];
+            for(int i=0;i<850;i++){
+                labelcount[i] = 0;
+            }
+            float x,y,z;
+            float ratioR[3]={1.0/ratio[0],1.0/ratio[1],1.0/ratio[2]};
+            int id;
+            int totalCount = 0;
+            int totalType = 0;
+            int px,py,pz;
+            for(int i=0;i<960;i++)
+                for(int j=0;j<960;j++)
+                {
+                    x = screenPixels[i][j][0];
+                    y = screenPixels[i][j][1];
+                    z = screenPixels[i][j][2];
+                    if(x>0.0f||y>0.0f||z>0.0f){
+                        px = int(z*dimension[2])<dimension[2]?int(z*dimension[2]):dimension[2]-1;
+                        py = int(y*dimension[1])<dimension[1]?int(y*dimension[1]):dimension[1]-1;
+                        pz = int(x*dimension[0])<dimension[0]?int(x*dimension[0]):dimension[0]-1;
+                        //x = (x-0.5)*ratioR[0]+0.5;
+                        //y = (y-0.5)*ratioR[1]+0.5;
+                        //z = (z-0.5)*ratioR[2]+0.5;
+                        //id = int(850*ulabel[int(z*dimension[2]*dimension[1]*dimension[0]+y*dimension[1]*dimension[0]+x*dimension[0])]);
+                        id = label[px][py*dimension[0]+pz];
+                        //cout<<y*dimension[1]*dimension[0]<<' '<<x*dimension[0]<<endl;
+                        //if(labelFlag[id]){
+                        //    cout<<id<<endl;
+                        //}
+                        totalCount++;
+                        if(labelcount[id]==0)
+                            totalType++;
+                        labelcount[id]++;
+                    }
+                }
+            cout<<"type:"<<totalType<<' '<<totalCount<<endl;
+            for(int i=0;i<850;i++){
+                cout<<labelcount[i]<<' ';
+                if(i%50==49)
+                    cout<<endl;
+            }
+            int averagecount;
+            if(totalType<2){
+                totalType=1;
+                averagecount=1;
+            }else{
+             averagecount = totalCount/totalType;
+            }
+            for(int i=0;i<850;i++){
+                if(labelcount[i]>=averagecount)
+                    labelFlag[i] = 0.5f;
+                else
+                    labelFlag[i] = 0.0f;
+            }
+            cout<<"========================="<<endl;
+            glsl.glActiveTex(GL_TEXTURE12);
+            glBindTexture(GL_TEXTURE_1D,labelFlagTex);
+            //glTexStorage3D(GL_TEXTURE_3D, 0, GL_R16, 512, 512, 175);
+            glTexImage1D(GL_TEXTURE_1D, 0,GL_R32F,850,0, GL_RED,GL_FLOAT,labelFlag);
+            graphCut = false;
+            paintGL();
         }
         //glsl.use(0);
     //std::cout<<1/nTime<<std::endl;     
@@ -998,7 +1086,10 @@ void VolumeRenderPanel::undoClip(){
     glDispatchCompute((dimension[0]+31)/32,(dimension[1]+31)/32,(dimension[2]+31)/32);
     //glDispatchCompute(8,8,6);
     glsl.use(0);
-
+    if(currentID>0){
+        currentID--;
+    }
+    update();
 }
 
 void VolumeRenderPanel::mousePressEvent(QMouseEvent *event)
@@ -1078,10 +1169,6 @@ void VolumeRenderPanel::mouseReleaseEvent(QMouseEvent *event){
         }
     }else{
         graphCut = !graphCut;
-        if(currentID>0){
-            undoClip();
-            currentID-=1.0f;
-        }
         //drawSelect = !drawSelect;
         /*if(currentID>0)
         {for(int i=0;i<SLICEZ;i++)
@@ -1374,6 +1461,11 @@ void VolumeRenderPanel::updateUniform(){
 
 void VolumeRenderPanel::setLeftMotionType(MotionType type){
     this->leftMotionType = type;
+    if(type==Rotate)
+        drawPolygon = false;
+    else
+        drawPolygon = true;
+    update();
 }
 
 void VolumeRenderPanel::setGraphCutColor(int type, float r,float g,float b){
@@ -1390,6 +1482,12 @@ void VolumeRenderPanel::setGraphCutColor(int type, float r,float g,float b){
 
 void VolumeRenderPanel::clearPoints(){
     points.clear();
+    for(int i=0;i<850;i++)
+        labelFlag[i] = 1.0f;
+    glsl.glActiveTex(GL_TEXTURE12);
+    glBindTexture(GL_TEXTURE_1D,labelFlagTex);
+    //glTexStorage3D(GL_TEXTURE_3D, 0, GL_R16, 512, 512, 175);
+    glTexImage1D(GL_TEXTURE_1D, 0,GL_R32F,850,0, GL_RED,GL_FLOAT,labelFlag);
     updateGL();
 }
 void VolumeRenderPanel::resetModel(){
@@ -1489,4 +1587,24 @@ glm::vec4 VolumeRenderPanel::slerp(glm::vec4 qa, glm::vec4 qb, float t) {
     qm.y = (qa.y * ratioA + qb.y * ratioB);
     qm.z = (qa.z * ratioA + qb.z * ratioB);
     return qm;
+}
+void VolumeRenderPanel::saveScreenShot()  
+{  
+    int clnWidth,clnHeight; //client width and height  
+    static void * screenData;  
+    RECT rc;  
+    int len = 960 * 960 * 3;  
+    screenData = malloc(len);  
+    memset(screenData,0,len);  
+    glReadPixels(0, 0, 960, 960, GL_RGB, GL_UNSIGNED_BYTE, screenData);  
+
+    //生成文件名字符串，以时间命名  
+    time_t tm = 0;  
+    tm = time(NULL);  
+    char lpstrFilename[256] = {0};  
+    sprintf_s(lpstrFilename,sizeof(lpstrFilename),"%d.bmp",tm);  
+
+    WriteBitmapFile(lpstrFilename,960,960,(unsigned char*)screenData);  
+    //释放内存  
+    free(screenData);  
 }

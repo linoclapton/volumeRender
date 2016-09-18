@@ -36,12 +36,14 @@ public:
     std::vector<MarkPoint> points;
     void setLeftMotionType(MotionType type);
     void setGraphCutColor(int type,float r,float g,float b);
+    void saveScreenShot();
 signals:
     void changeSlider(float min,float max);
     void changeLight(float*,float*,float*);
 public slots:
     void clearPoints();
     void resetModel();
+    void undoClip();
 private slots:
     void rotateBack();
 protected:
@@ -64,7 +66,6 @@ private:
     void clipData();
     inline bool exclude(float x,float y,float z,float x1,float y1,float a,float b,float c);
     void drawString(const char*);
-    void undoClip();
     void vertex(int index);
     glm::vec4 slerp(glm::vec4,glm::vec4,float);
     glm::vec4 mat2q(glm::mat4);
@@ -137,6 +138,11 @@ private:
     QTimer* rotateTimer;
     int rotateBackTimes;
     glm::mat4 rotateBackModel;
+    GLuint labelFlagTex;
+    float labelFlag[1024];
     SLIC slic;
+    GLfloat radius;
+    bool drawPolygon;
+    int** label;
 };
 

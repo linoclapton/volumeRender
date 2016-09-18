@@ -125,6 +125,7 @@
     <ClCompile Include="Present.cpp" />
     <ClCompile Include="QRenderHoverPoints.cpp" />
     <ClCompile Include="QTransferFunction1DItem.cpp" />
+    <ClCompile Include="RunGuard.cpp" />
     <ClCompile Include="SLIC.cpp" />
     <ClCompile Include="Torus.cpp" />
     <ClCompile Include="TransferFunction1DWidget.cpp" />
@@ -162,6 +163,8 @@
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="graphcut.h" />
     <ClInclude Include="MarkPoint.h" />
+    <ClInclude Include="mat2bmp.h" />
+    <ClInclude Include="RunGuard.h" />
     <ClInclude Include="Serializable.h" />
     <ClInclude Include="SLIC.h" />
     <ClInclude Include="Torus.h" />

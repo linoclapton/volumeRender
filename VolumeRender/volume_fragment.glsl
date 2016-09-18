@@ -51,6 +51,7 @@ vec3 rayDir;
 uniform float albedo;
 uniform sampler2DArray asTable;
 uniform bool graphCut;
+uniform sampler1D label_flag;
 
 bool check(float f){
 	if(f+0.5<0||f+0.5>1)
@@ -283,10 +284,11 @@ vec4 oneDimensionTransfer(){
     vec4 dir = (rayEnd-rayStart)/maxStep;
     rayDir = normalize(dir).xyz;
     vec4 maxAlpha = vec4(0.0,0.0,0.0,0.0);
-    float voxel = 0;float preVoxel = 0;
+    float voxel = 0;float voxelLabel = 0;
     int loop = 1,index = 0;
     vec4 result[5];
     vec4 originStart = rayStart;
+    float tmpLabel;
     vec2 random[5] = {vec2(-1,0),vec2(0,1),vec2(1,0),vec2(0,0),vec2(0,-1)};
     for(index=0;index<loop;index++){
         rayStart = originStart+dir*rand(gl_FragCoord.xy+random[index]);
@@ -296,9 +298,11 @@ vec4 oneDimensionTransfer(){
             continue;
         //preVoxel = getVoxel(vec3(rayStart+(step-1)*dir).xyz); 
         voxel = getVoxel(vec3(rayStart+step*dir).xyz);
+        voxelLabel = texture(volume_label,(rayStart+step*dir).xyz).r;
+        tmpLabel = texture(label_flag,voxelLabel).r;
 		acc =  texture(opacity_tex,voxel.x).r;
         //acc = texture(preIntegerationTable,vec2(preVoxel,voxel)).a;
-		if(acc>0.00002)
+		if(tmpLabel>0.3f&&acc>0.00002)
 		{
 			//color = color + (texture(color_tex,voxel)*(1-alpha)).rgb; //lightColor(Model*(rayStart+step*dir-0.5),texture(color_tex,voxel))*(1-alpha);
             if(acc>maxAlpha.a)
@@ -306,6 +310,7 @@ vec4 oneDimensionTransfer(){
 			//color = color + acc*(1-alpha);
             //color = color + microfacet( (rayStart+step*dir).xyz, texture(color_tex,voxel).rgb,dir.xyz)*(1-alpha)*acc;
             color = color + LeovyColor( (rayStart+step*dir).xyz, texture(color_tex,voxel).rgb,dir.xyz)*(1-alpha)*acc;
+            //color = color + LeovyColor( (rayStart+step*dir).xyz, vec3(voxelLabel,voxelLabel,voxelLabel),dir.xyz)*(1-alpha)*acc;
 			alpha = 1-(1-alpha)*(1-acc);
                 //color = color + LeovyColor( (rayStart+step*dir).xyz, texture(preIntegerationTable,vec2(preVoxel,voxel)).rgb,dir.xyz)*(1-alpha)*acc; 
                 //color = color + texture(color_tex,voxel).rgb*(1-alpha)*acc;
@@ -366,7 +371,7 @@ vec4 renderGraphCutBF(){
     vec4 originStart = rayStart;
     vec2 random[5] = {vec2(-1,0),vec2(0,1),vec2(1,0),vec2(0,0),vec2(0,-1)};
     for(index=0;index<loop;index++){
-        rayStart = originStart+dir*rand(gl_FragCoord.xy+random[index]);
+        rayStart = originStart;
 	for(step=0;step<maxStep;step++){
 		//acc = texture(volume_tex,vec3(sPos.x+0.5,-sPos.z+step*stepSize,sPos.y+0.5)).r;
         if(DrawSelect&&texture(volume_flag,vec3(rayStart+step*dir).xyz).r!=0)
@@ -375,7 +380,7 @@ vec4 renderGraphCutBF(){
         voxel = getVoxel(vec3(rayStart+step*dir).xyz);
 		acc =  texture(opacity_tex,voxel.x).r;
         //acc = texture(preIntegerationTable,vec2(preVoxel,voxel)).a;
-		if(acc>0.00002)
+		if(acc>0.002)
 		{
 			//color = color + (texture(color_tex,voxel)*(1-alpha)).rgb; //lightColor(Model*(rayStart+step*dir-0.5),texture(color_tex,voxel))*(1-alpha);
             if(acc>maxAlpha.a)

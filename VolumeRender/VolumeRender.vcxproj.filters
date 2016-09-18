@@ -36,6 +36,12 @@
     <Filter Include="shader">
       <UniqueIdentifier>{d1afe8ad-0c26-4fb6-8f50-3d4eacb30b64}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\graphcut">
+      <UniqueIdentifier>{e51bf02a-1d48-4f14-a703-ce86c884d4ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphcut">
+      <UniqueIdentifier>{74584e81-034a-4fd9-afb6-869affaa986b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -89,9 +95,6 @@
     <ClCompile Include="GLSLProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="graphcut.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="QRenderHoverPoints.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -109,6 +112,12 @@
     </ClCompile>
     <ClCompile Include="VolumeRenderPanel.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RunGuard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="graphcut.cpp">
+      <Filter>Source Files\graphcut</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,16 +153,10 @@
     <ClInclude Include="AVSTable2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bit_vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GLSLProgram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="graphcut.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MarkPoint.h">
@@ -169,6 +172,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RunGuard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graphcut.h">
+      <Filter>Header Files\graphcut</Filter>
+    </ClInclude>
+    <ClInclude Include="bit_vector.h">
+      <Filter>Header Files\graphcut</Filter>
+    </ClInclude>
+    <ClInclude Include="mat2bmp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

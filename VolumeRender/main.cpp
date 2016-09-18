@@ -5,10 +5,15 @@
 #include <fstream>
 #include <QPushButton>
 #include "Utility.h"
+#include "RunGuard.h"
+#include "graphcut.h"
 int main(int argc, char *argv[])
 {
     Utility::Clock clock;
     clock.start();
+    RunGuard guard( "OpenGL" );
+    if ( !guard.tryToRun() )
+        return 0;
     QApplication a(argc, argv);
     Present* myWindow = new Present;
     myWindow->show();

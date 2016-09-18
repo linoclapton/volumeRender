@@ -51,6 +51,7 @@ Present::Present(QWidget *parent)
     connect(ui.checkBox_foreground,SIGNAL(stateChanged(int)),this,SLOT(changeMotionStatus(int)));
     connect(ui.checkBox_background,SIGNAL(stateChanged(int)),this,SLOT(changeMotionStatus(int)));
     connect(ui.button_cleargraphcut,SIGNAL(clicked()),ui.openGLWidget,SLOT(clearPoints()));
+    connect(ui.button_undoclip,SIGNAL(clicked()),ui.openGLWidget,SLOT(undoClip()));
 }
 void Present::changeLight(float* am,float* diff,float* spec){
     for(int i=0;i<3;i++){
