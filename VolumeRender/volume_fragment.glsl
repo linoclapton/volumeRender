@@ -310,7 +310,7 @@ vec4 oneDimensionTransfer(){
 			//color = color + acc*(1-alpha);
             //color = color + microfacet( (rayStart+step*dir).xyz, texture(color_tex,voxel).rgb,dir.xyz)*(1-alpha)*acc;
             color = color + LeovyColor( (rayStart+step*dir).xyz, texture(color_tex,voxel).rgb,dir.xyz)*(1-alpha)*acc;
-            //color = color + LeovyColor( (rayStart+step*dir).xyz, vec3(voxelLabel,voxelLabel,voxelLabel),dir.xyz)*(1-alpha)*acc;
+            //color = color + LeovyColor( (rayStart+step*dir).xyz, vec3(voxelLabel,1.0-voxelLabel,0).rgb,dir.xyz)*(1-alpha)*acc;
 			alpha = 1-(1-alpha)*(1-acc);
                 //color = color + LeovyColor( (rayStart+step*dir).xyz, texture(preIntegerationTable,vec2(preVoxel,voxel)).rgb,dir.xyz)*(1-alpha)*acc; 
                 //color = color + texture(color_tex,voxel).rgb*(1-alpha)*acc;

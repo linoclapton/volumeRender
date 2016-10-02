@@ -119,6 +119,9 @@
     <ClCompile Include="graphcut.cpp">
       <Filter>Source Files\graphcut</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Present.h">
@@ -201,6 +204,12 @@
       <Filter>shader</Filter>
     </None>
     <None Include="volume_vertex.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="fragment_plane.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="vertex_plane.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

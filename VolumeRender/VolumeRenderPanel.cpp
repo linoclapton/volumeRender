@@ -243,6 +243,7 @@ void VolumeRenderPanel::initializeGL(){
 		//Problem: glewInit failed, something is seriously wrong.
 	}
     //torus =new Torus(0.7,0.15,60,60);
+    cout<<"-----------------before initializeGL---------------------"<<endl;
 	glsl.create();
 	glsl.attachShader(GL_VERTEX_SHADER, "volume_vertex.glsl");
 	//glsl.attachShader(GL_VERTEX_SHADER, "vertex1.glsl");
